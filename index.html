@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>After Effects to ComfyUI Keyframe Converter</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .section {
+            background: #f7f7f7;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            transition: transform 0.2s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-2px);
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .copy-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-button:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        
+        .preview {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            color: #555;
+            display: none;
+        }
+        
+        .preview h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .instructions {
+            background: rgba(102, 126, 234, 0.05);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .instructions p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            color: #666;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AE → ComfyUI Converter</h1>
+        <p class="subtitle">Convert After Effects keyframe data to ComfyUI JSON format</p>
+        
+        <div class="instructions">
+            <h3>How to use (single layer):</h3>
+            <ol>
+                <li>In After Effects, select your animated points</li>
+                <li>Go to <strong>Edit → Copy</strong> or press <strong>Ctrl/Cmd + C</strong></li>
+                <li>Paste the keyframe data in the left box below</li>
+                <li>Click <strong>Convert to ComfyUI</strong></li>
+                <li>Copy the JSON output from the right box</li>
+            </ol>
+            <p><strong>Note:</strong> This tool expects point animations with X and Y position data. The tool will automatically round coordinates to integers.</p>
+            <h3>How to use (multiple layers):</h3>
+            <p>Automatically bake and export keyframes on multiple layers using <a href="https://gist.github.com/nathanshipley/fb7ff367364f12923952cf8510558e70">this script</a>.</p>  
+            <p>Basic walkthrough shown on <a href="https://youtu.be/RQkKLuACzfQ">this Youtube video</a>.</p>
+        </div>
+        
+        <div class="grid">
+            <div class="section">
+                <label for="aeInput">After Effects Keyframe Data</label>
+                <textarea id="aeInput" placeholder="Paste your After Effects keyframe data here..."></textarea>
+            </div>
+            
+            <div class="section">
+                <label for="jsonOutput">ComfyUI JSON Output</label>
+                <button class="copy-button" onclick="copyToClipboard()">Copy</button>
+                <textarea id="jsonOutput" placeholder="Converted JSON will appear here..." readonly></textarea>
+            </div>
+        </div>
+        
+        <button onclick="convertData()">Convert to ComfyUI</button>
+        
+        <div id="status" class="status"></div>
+        <div id="preview" class="preview"></div>
+    </div>
+    
+    <script>
+        function parseAEKeyframeData(aeData) {
+            const datasets = aeData.split("Adobe After Effects 8.0 Keyframe Data");
+            const allPoints = [];
+            
+            for (const dataset of datasets) {
+                if (!dataset.includes("Transform\tPosition")) {
+                    continue;
+                }
+                
+                const lines = dataset.trim().split('\n');
+                const points = [];
+                let inData = false;
+                
+                for (const line of lines) {
+                    // Check for header line (with tabs or spaces)
+                    if (line.includes("Frame") && line.includes("X pixels") && line.includes("Y pixels")) {
+                        inData = true;
+                        continue;
+                    }
+                    
+                    if (inData && line.trim() && !line.startsWith("End of")) {
+                        // Try splitting by tab first, then by multiple spaces
+                        let parts = line.trim().split('\t');
+                        if (parts.length < 3) {
+                            // If no tabs, split by multiple spaces
+                            parts = line.trim().split(/\s+/);
+                        }
+                        
+                        if (parts.length >= 3) {
+                            try {
+                                const frame = parseInt(parts[0]);
+                                const x = Math.round(parseFloat(parts[1]));
+                                const y = Math.round(parseFloat(parts[2]));
+                                
+                                points.push({ x, y });
+                            } catch (e) {
+                                // Skip invalid lines
+                            }
+                        }
+                    }
+                }
+                
+                if (points.length > 0) {
+                    allPoints.push(points);
+                }
+            }
+            
+            return allPoints;
+        }
+        
+        function convertData() {
+            const input = document.getElementById('aeInput').value;
+            const output = document.getElementById('jsonOutput');
+            const status = document.getElementById('status');
+            const preview = document.getElementById('preview');
+            
+            if (!input.trim()) {
+                showStatus('Please paste After Effects keyframe data first', 'error');
+                return;
+            }
+            
+            try {
+                const pointsData = parseAEKeyframeData(input);
+                
+                if (pointsData.length === 0) {
+                    showStatus('No valid position keyframe data found. Make sure you copied position keyframes from After Effects.', 'error');
+                    return;
+                }
+                
+                const jsonOutput = JSON.stringify(pointsData);
+                output.value = jsonOutput;
+                
+                // Show preview
+                let previewHtml = `<h3>Preview - Found ${pointsData.length} point animation${pointsData.length > 1 ? 's' : ''}:</h3>`;
+                pointsData.forEach((points, index) => {
+                    previewHtml += `<p><strong>Animation ${index + 1}:</strong> ${points.length} frames</p>`;
+                    previewHtml += `<p>First frame: x=${points[0].x}, y=${points[0].y}</p>`;
+                    previewHtml += `<p>Last frame: x=${points[points.length-1].x}, y=${points[points.length-1].y}</p>`;
+                    if (index < pointsData.length - 1) {
+                        previewHtml += '<br>';
+                    }
+                });
+                
+                preview.innerHTML = previewHtml;
+                preview.style.display = 'block';
+                
+                showStatus(`Successfully converted ${pointsData.length} point animation${pointsData.length > 1 ? 's' : ''}!`, 'success');
+            } catch (error) {
+                showStatus('Error converting data: ' + error.message, 'error');
+                console.error(error);
+            }
+        }
+        
+        function copyToClipboard() {
+            const output = document.getElementById('jsonOutput');
+            if (!output.value) {
+                showStatus('Nothing to copy. Convert data first.', 'error');
+                return;
+            }
+            
+            output.select();
+            document.execCommand('copy');
+            showStatus('Copied to clipboard!', 'success');
+        }
+        
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Allow tab key in textarea
+        document.getElementById('aeInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                this.value = this.value.substring(0, start) + '\t' + this.value.substring(end);
+                this.selectionStart = this.selectionEnd = start + 1;
+            }
+        });
+    </script>
+</body>
+</html>
